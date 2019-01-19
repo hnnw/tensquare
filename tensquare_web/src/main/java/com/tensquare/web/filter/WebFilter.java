@@ -24,7 +24,7 @@ public class WebFilter extends ZuulFilter{
     @Autowired
     private FilterProperties list;
 
-    private  static ThreadLocal<String> threadLocal=new ThreadLocal<>();
+
 
     @Override
     public String filterType() {
@@ -45,6 +45,7 @@ public class WebFilter extends ZuulFilter{
             return false;
         }
         String uri = request.getRequestURI();
+        System.out.println(uri);
         return !isAllowPath(uri);
     }
     private boolean isAllowPath(String requestURI) {
@@ -71,6 +72,7 @@ public class WebFilter extends ZuulFilter{
             Claims claims = jwtUtil.parseJWT(token);
             if (claims!=null){
                 requestContext.addZuulRequestHeader("Authorization",authHeader);
+                String s =(String) claims.get("roles");
                 return null;
             } }catch (Exception e){
                 requestContext.setSendZuulResponse(false);//终止运行
@@ -82,6 +84,7 @@ public class WebFilter extends ZuulFilter{
         requestContext.setResponseStatusCode(401);//http状态码
         return null;
     }
+
 
 
 }

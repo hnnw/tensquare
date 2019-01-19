@@ -1,10 +1,9 @@
 package com.tensquare.qa.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Resource;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -12,11 +11,15 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 
+import com.tensquare.qa.dao.ReplyDao;
+import com.tensquare.qa.pojo.Reply;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,13 @@ public class ProblemService {
 	
 	@Autowired
 	private IdWorker idWorker;
+
+	@Autowired
+	private ReplyDao replyDao;
+	@Resource
+	private RedisTemplate<String,Object> redisTemplate;
+
+	private final String S="tensquare_problem";
 
 	/**
 	 * 查询全部列表
@@ -80,7 +90,13 @@ public class ProblemService {
 	 * @return
 	 */
 	public Problem findById(String id) {
-		return problemDao.findById(id).get();
+
+		Problem problem = problemDao.findById(id).get();
+		List<Reply> byProblemid = replyDao.findByProblemid(id);
+		//把回答集合传入问题
+		problem.setList(byProblemid);
+		return problem;
+
 	}
 
 	/**
@@ -89,6 +105,7 @@ public class ProblemService {
 	 */
 	public void add(Problem problem) {
 		problem.setId( idWorker.nextId()+"" );
+		problem.setSolve("0");
 		problemDao.save(problem);
 	}
 
@@ -181,6 +198,7 @@ public class ProblemService {
 	public Page<Problem> findHotProblem(String id,Integer page,Integer size){
 		PageRequest of = PageRequest.of(page-1, size);
 		if ("0".equals(id)){
+
 			return problemDao.findHotProblem(of);
 		}
 		return problemDao.findHotProblem(id,of);
@@ -195,10 +213,27 @@ public class ProblemService {
      */
     public Page<Problem> findWaitProblem(String id,Integer page,Integer size){
         PageRequest of = PageRequest.of(page-1, size);
-        if ("0".equals(id)){
-            return problemDao.findWaitProblem(of);
-        }
-        return problemDao.findWaitProblem(id,of);
+        Map<String,Object> map = new HashMap<>();
+            if ("0".equals(id)) {
+                Page<Problem> waitProblem = problemDao.findWaitProblem(of);
+                map.put("1",waitProblem);
+                redisTemplate.opsForValue().set(S + "WaitProblem"+id, map, 5, TimeUnit.MINUTES);
+                return waitProblem;
+            }
+            Page<Problem> waitProblem = problemDao.findWaitProblem(id, of);
+            map.put("1",waitProblem);
+            redisTemplate.opsForValue().set(S + "WaitProblem"+id, map, 5, TimeUnit.MINUTES);
+            return problemDao.findWaitProblem(id, of);
     }
+
+	/**
+	 * 查询用户提问的问题
+	 * @param id
+	 * @return
+	 */
+	public List<Problem> findByUserid(String id){
+		return problemDao.findByUserid(id);
+	}
+
 
 }

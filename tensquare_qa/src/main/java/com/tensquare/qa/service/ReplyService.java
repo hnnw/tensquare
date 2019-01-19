@@ -89,7 +89,12 @@ public class ReplyService {
 	 */
 	public void add(Reply reply) {
 		reply.setId( idWorker.nextId()+"" );
+		reply.setVersion(0);
 		replyDao.save(reply);
+	}
+
+	public void addGree(String id){
+		replyDao.updateReplyVersion(id);
 	}
 
 	/**

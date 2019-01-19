@@ -14,9 +14,10 @@ zuul:
     tensquare-user: user/**
 jwt:
   config:
-    key: itcast
+    key: tensquare
   filter:
     allowPaths:
-      - /user
+      - /user/user/login
+      - /user/admin/login
 
 

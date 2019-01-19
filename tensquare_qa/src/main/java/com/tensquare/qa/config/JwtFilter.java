@@ -1,4 +1,4 @@
-package com.tensquare.user.config;
+package com.tensquare.qa.config;
 
 import io.jsonwebtoken.Claims;
 import org.apache.commons.lang3.StringUtils;
@@ -31,10 +31,11 @@ public class JwtFilter extends HandlerInterceptorAdapter {
 
                if (!StringUtils.isEmpty(roles)){
                    if ("admin".equals(roles)){
-                       request.setAttribute("admin_claims",roles);
+                       tl.set("admin");
                    }
                    if ("user".equals(roles)){
-                       request.setAttribute("user_claims",roles);
+                       //request.setAttribute("user_claims",roles);
+                       tl.set("user");
                    }
                }
             }catch (Exception e){
@@ -46,5 +47,15 @@ public class JwtFilter extends HandlerInterceptorAdapter {
         return true;
     }
 
+    public static String get(){
+        return tl.get();
+    }
+    public static void  rm(){
+        tl.remove();
+    }
 
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        JwtFilter.rm();
+    }
 }

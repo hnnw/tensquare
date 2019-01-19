@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import com.tensquare.qa.pojo.Problem;
@@ -12,6 +13,9 @@ import com.tensquare.qa.service.ProblemService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+
+import javax.annotation.Resource;
+
 /**
  * 控制器层
  * @author Administrator
@@ -24,6 +28,9 @@ public class ProblemController {
 
 	@Autowired
 	private ProblemService problemService;
+
+	@Resource
+	private RedisTemplate<String,Object> redisTemplate;
 	
 	
 	/**
@@ -112,6 +119,7 @@ public class ProblemController {
 	public Result findNewProblem(@PathVariable("label") String id,
 								 @PathVariable("page") Integer page,
 								 @PathVariable("size") Integer size){
+
 		Page<Problem> newProblem = problemService.findNewProblem(id, page, size);
 		return new Result(true,StatusCode.OK,"查询最新回答",new PageResult<Problem>(newProblem.getTotalElements(),newProblem.getContent()));
 	}
@@ -143,6 +151,12 @@ public class ProblemController {
 	public Result findWaitProblem(@PathVariable("label") String id,
 								 @PathVariable("page") Integer page,
 								 @PathVariable("size") Integer size){
+		 Map<String,Object> map= (Map) redisTemplate.opsForValue().get("tensquare_problemWaitProblem" + id);
+		if (map!=null){
+			Page<Problem> newProblem = (Page<Problem>) map.get("1");
+			System.out.println(newProblem);
+			return new Result(true,StatusCode.OK,"查询等待回答",new PageResult<Problem>(newProblem.getTotalElements(),newProblem.getContent()));
+		}
 		Page<Problem> newProblem = problemService.findWaitProblem(id, page, size);
 		return new Result(true,StatusCode.OK,"查询等待回答",new PageResult<Problem>(newProblem.getTotalElements(),newProblem.getContent()));
 	}

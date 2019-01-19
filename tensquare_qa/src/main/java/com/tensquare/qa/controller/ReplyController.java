@@ -2,14 +2,11 @@ package com.tensquare.qa.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.tensquare.qa.config.JwtFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.tensquare.qa.pojo.Reply;
 import com.tensquare.qa.service.ReplyService;
@@ -17,6 +14,9 @@ import com.tensquare.qa.service.ReplyService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * 控制器层
  * @author Administrator
@@ -29,6 +29,8 @@ public class ReplyController {
 
 	@Autowired
 	private ReplyService replyService;
+	@Autowired
+	private HttpServletRequest httpServletRequest;
 	
 	
 	/**
@@ -80,6 +82,10 @@ public class ReplyController {
 	 */
 	@RequestMapping(method=RequestMethod.POST)
 	public Result add(@RequestBody Reply reply  ){
+		String s = JwtFilter.get();
+		if (StringUtils.isEmpty(s)){
+			return new Result(false,StatusCode.ERROR,"请先登录");
+		}
 		replyService.add(reply);
 		return new Result(true,StatusCode.OK,"增加成功");
 	}
@@ -104,5 +110,7 @@ public class ReplyController {
 		replyService.deleteById(id);
 		return new Result(true,StatusCode.OK,"删除成功");
 	}
+
+
 	
 }

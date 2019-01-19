@@ -1,4 +1,4 @@
-package com.tensquare.user.config;
+package com.tensquare.qa.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
