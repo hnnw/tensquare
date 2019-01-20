@@ -1,6 +1,8 @@
 package com.tensquare.search.controller;
 
 import com.tensquare.search.pojo.Article;
+import com.tensquare.search.pojo.SearchRequest;
+import com.tensquare.search.pojo.SearchResult;
 import com.tensquare.search.service.SearchService;
 import entity.PageResult;
 import entity.Result;
@@ -23,5 +25,11 @@ public class SearchController {
                          @PathVariable("size") Integer size){
         Page<Article> serach = searchService.serach(key, page, size);
         return new Result(true, StatusCode.OK, "查询成功",new PageResult<Article>(serach.getTotalElements(),serach.getContent()));
+    }
+
+    @PostMapping("/search")
+    public Result search111(@RequestBody SearchRequest searchRequest){
+        SearchResult s= searchService.searchResult(searchRequest);
+        return new Result(true, StatusCode.OK, "查询成功",s);
     }
 }
